@@ -1,0 +1,184 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+
+import 'package:pos_app/app/data/product_model.dart';
+import 'package:pos_app/app/modules/home/controllers/home_controller.dart';
+import 'package:pos_app/core/theme/app_colors.dart';
+import 'package:pos_app/core/theme/app_text_styles.dart';
+
+class CartDetailsSheet extends GetView<HomeController> {
+  const CartDetailsSheet({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (_, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Detail Pesanan', style: AppTextStyles.heading),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Obx(
+                  () => ListView.separated(
+                    controller: scrollController,
+                    itemCount: controller.cartItems.length,
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1, indent: 20, endIndent: 20),
+                    itemBuilder: (context, index) {
+                      Product product = controller.cartItems.keys.elementAt(index);
+                      int quantity = controller.cartItems[product]!;
+                      return _CartListItem(product: product, quantity: quantity);
+                    },
+                  ),
+                ),
+              ),
+              _buildBottomSummary(),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBottomSummary() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total', style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold)),
+              Obx(
+                () => Text(
+                  NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0)
+                      .format(controller.totalCartPrice.value),
+                  style: AppTextStyles.heading,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {},
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: Text(
+                'Lanjut ke Pembayaran',
+                style: AppTextStyles.button.copyWith(color: AppColors.text),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CartListItem extends StatelessWidget {
+  final Product product;
+  final int quantity;
+  const _CartListItem({required this.product, required this.quantity});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<HomeController>();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              product.imageUrl,
+              width: 60,
+              height: 60,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.name,
+                  style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0)
+                      .format(product.price),
+                  style: AppTextStyles.body.copyWith(color: AppColors.primary),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.remove, size: 16),
+                  onPressed: () => controller.decreaseQuantity(product),
+                  color: AppColors.text,
+                ),
+                Text(
+                  quantity.toString(),
+                  style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add, size: 16),
+                  onPressed: () => controller.increaseQuantity(product),
+                  color: AppColors.text,
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
