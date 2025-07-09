@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:pos_app/app/data/product_model.dart';
 import 'package:pos_app/app/data/providers/product_provider.dart';
 import 'package:pos_app/app/modules/home/widgets/cart_details_sheet.dart';
+import 'package:pos_app/core/theme/app_colors.dart';
 
 class HomeController extends GetxController {
   final ProductProvider _productProvider = ProductProvider();
@@ -54,7 +55,6 @@ class HomeController extends GetxController {
 
   void changeCategory(String category) {
     selectedCategory.value = category;
-    print('[DEBUG] Ganti kategori ke: "$category" (trimmed: "${category.trim()}")');
   }
 
   List<Product> get filteredProducts {
@@ -93,6 +93,38 @@ class HomeController extends GetxController {
     } else {
       cartItems.update(product, (value) => value - 1);
     }
+    calculateTotalPrice();
+  }
+
+  void removeFromCart(Product product) {
+    cartItems.remove(product);
+    calculateTotalPrice();
+  }
+
+  void confirmClearCart() {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Konfirmasi'),
+        content: const Text('Anda yakin ingin mengosongkan seluruh keranjang?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () {
+              clearCart();
+              Get.back();
+            },
+            child: const Text('Ya, Kosongkan', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void clearCart() {
+    cartItems.clear();
     calculateTotalPrice();
   }
 

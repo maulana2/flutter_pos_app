@@ -25,36 +25,29 @@ class CartDetailsSheet extends GetView<HomeController> {
           ),
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 50,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text('Detail Pesanan', style: AppTextStyles.heading),
-                  ],
-                ),
-              ),
+              _buildHeader(),
               Expanded(
                 child: Obx(
-                  () => ListView.separated(
-                    controller: scrollController,
-                    itemCount: controller.cartItems.length,
-                    separatorBuilder: (context, index) =>
-                        const Divider(height: 1, indent: 20, endIndent: 20),
-                    itemBuilder: (context, index) {
-                      Product product = controller.cartItems.keys.elementAt(index);
-                      int quantity = controller.cartItems[product]!;
-                      return _CartListItem(product: product, quantity: quantity);
-                    },
-                  ),
+                  () {
+                    if (controller.cartItems.isEmpty) {
+                      // Tutup bottom sheet jika keranjang menjadi kosong
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        Get.back();
+                      });
+                      return const Center(child: Text('Keranjang kosong.'));
+                    }
+                    return ListView.separated(
+                      controller: scrollController,
+                      itemCount: controller.cartItems.length,
+                      separatorBuilder: (context, index) =>
+                          const Divider(height: 1, indent: 20, endIndent: 20),
+                      itemBuilder: (context, index) {
+                        Product product = controller.cartItems.keys.elementAt(index);
+                        int quantity = controller.cartItems[product]!;
+                        return _buildDismissibleCartItem(product, quantity);
+                      },
+                    );
+                  },
                 ),
               ),
               _buildBottomSummary(),
@@ -65,51 +58,116 @@ class CartDetailsSheet extends GetView<HomeController> {
     );
   }
 
-  Widget _buildBottomSummary() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: Column(
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
             children: [
-              Text('Total', style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold)),
-              Obx(
-                () => Text(
-                  NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0)
-                      .format(controller.totalCartPrice.value),
-                  style: AppTextStyles.heading,
+              Container(
+                width: 50,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
+              const SizedBox(height: 16),
+              Text('Detail Pesanan', style: AppTextStyles.heading),
             ],
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: Text(
-                'Lanjut ke Pembayaran',
-                style: AppTextStyles.button.copyWith(color: AppColors.text),
-              ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Obx(
+              () => controller.cartItems.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () => controller.confirmClearCart(),
+                    )
+                  : const SizedBox.shrink(),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDismissibleCartItem(Product product, int quantity) {
+    return Dismissible(
+      key: ValueKey(product.id),
+      direction: DismissDirection.endToStart,
+      onDismissed: (direction) {
+        controller.removeFromCart(product);
+        Get.snackbar(
+          'Dihapus',
+          '${product.name} telah dihapus dari pesanan.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(12),
+          borderRadius: 8,
+        );
+      },
+      background: Container(
+        color: Colors.red,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        alignment: Alignment.centerRight,
+        child: const Icon(Icons.delete_sweep, color: Colors.white),
+      ),
+      child: _CartListItem(product: product, quantity: quantity),
+    );
+  }
+
+  Widget _buildBottomSummary() {
+    return Obx(
+      () => controller.cartItems.isEmpty
+          ? const SizedBox.shrink()
+          : Container(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Total',
+                          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold)),
+                      Text(
+                        NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0)
+                            .format(controller.totalCartPrice.value),
+                        style: AppTextStyles.heading,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text(
+                        'Lanjut ke Pembayaran',
+                        style: AppTextStyles.button.copyWith(color: AppColors.text),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }
