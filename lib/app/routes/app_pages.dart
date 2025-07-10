@@ -6,6 +6,8 @@ import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
+import '../modules/transaction_success/bindings/transaction_success_binding.dart';
+import '../modules/transaction_success/views/transaction_success_view.dart';
 
 part 'app_routes.dart';
 
@@ -29,6 +31,11 @@ class AppPages {
       name: _Paths.CHECKOUT,
       page: () => const CheckoutView(),
       binding: CheckoutBinding(),
+    ),
+    GetPage(
+      name: _Paths.TRANSACTION_SUCCESS,
+      page: () => const TransactionSuccessView(),
+      binding: TransactionSuccessBinding(),
     ),
   ];
 }

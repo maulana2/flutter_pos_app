@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:pos_app/app/data/product_model.dart';
+import 'package:pos_app/app/data/models/product_model.dart';
+import 'package:pos_app/app/data/models/transaction_model.dart';
 import 'package:pos_app/app/modules/home/controllers/home_controller.dart';
 import 'package:pos_app/app/modules/checkout/widgets/payment_method_sheet.dart';
 import 'package:pos_app/app/routes/app_pages.dart';
@@ -168,39 +169,21 @@ class CheckoutController extends GetxController {
     final homeController = Get.find<HomeController>();
     homeController.clearCart();
 
-    Get.dialog(
-      barrierDismissible: false,
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Transaksi Berhasil'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.check_circle, color: AppColors.primary, size: 60),
-            const SizedBox(height: 16),
-            const Text('Pembayaran telah berhasil diproses.', textAlign: TextAlign.center),
-            if (selectedPaymentMethod.value == PaymentMethod.cash && cashChange.value >= 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(
-                    'Kembalian: Rp ${NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0).format(cashChange.value)}'),
-              )
-          ],
-        ),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          TextButton(
-            onPressed: () {
-              Get.offAllNamed(Routes.HOME);
-            },
-            child: const Text('Transaksi Baru'),
-          ),
-          ElevatedButton(
-            onPressed: () {},
-            child: const Text('Cetak Struk'),
-          ),
-        ],
-      ),
+    final transaction = TransactionModel(
+      id: 'TRX-${DateTime.now().millisecondsSinceEpoch}',
+      date: DateTime.now(),
+      items: Map.from(orderItems),
+      subtotal: subtotal.value,
+      discount: discount.value,
+      tax: tax.value,
+      grandTotal: grandTotal.value,
+      paymentMethod: selectedPaymentMethod.value,
+      cashAmount: double.tryParse(cashAmountController.text) ?? 0.0,
+      cashChange: cashChange.value,
+      orderType: orderType.value,
+      notes: notesController.text,
     );
+
+    Get.offNamed(Routes.TRANSACTION_SUCCESS, arguments: transaction);
   }
 }

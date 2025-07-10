@@ -1,4 +1,4 @@
-import 'package:pos_app/app/data/product_model.dart';
+import 'package:pos_app/app/data/models/product_model.dart';
 
 class ProductProvider {
   Future<List<Product>> getProducts() async {
