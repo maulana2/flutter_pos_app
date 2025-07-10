@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:pos_app/app/modules/checkout/controllers/checkout_controller.dart';
 import 'package:pos_app/core/theme/app_colors.dart';
 import 'package:pos_app/core/theme/app_text_styles.dart';
 
@@ -7,6 +9,8 @@ class PaymentMethodSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<CheckoutController>();
+
     return Container(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -16,18 +20,18 @@ class PaymentMethodSheet extends StatelessWidget {
           Text('Pilih Metode Pembayaran', style: AppTextStyles.heading),
           const SizedBox(height: 20),
           _buildPaymentMethodTile(
-            icon: Icons.money,
+            icon: Icons.money_rounded,
             label: 'Tunai',
             onTap: () {
-              // Aksi untuk pembayaran tunai
+              controller.selectPaymentMethod(PaymentMethod.cash);
             },
           ),
           const Divider(height: 24),
           _buildPaymentMethodTile(
-            icon: Icons.qr_code_2,
+            icon: Icons.qr_code_2_rounded,
             label: 'QRIS',
             onTap: () {
-              // Aksi untuk pembayaran QRIS
+              controller.selectPaymentMethod(PaymentMethod.qris);
             },
           ),
           const SizedBox(height: 10),
@@ -44,6 +48,7 @@ class PaymentMethodSheet extends StatelessWidget {
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
 }

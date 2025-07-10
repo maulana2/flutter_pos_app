@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:pos_app/app/data/product_model.dart';
 import 'package:pos_app/app/modules/home/controllers/home_controller.dart';
 import 'package:pos_app/app/modules/checkout/widgets/payment_method_sheet.dart';
@@ -13,24 +14,19 @@ enum DiscountType { none, percent, nominal }
 enum PaymentMethod { none, cash, qris }
 
 class CheckoutController extends GetxController {
-  // Data Pesanan
   final RxMap<Product, int> orderItems = <Product, int>{}.obs;
 
-  // Opsi Pesanan
   final Rx<OrderType> orderType = OrderType.dineIn.obs;
   final TextEditingController notesController = TextEditingController();
 
-  // Kalkulasi Biaya
   final RxDouble subtotal = 0.0.obs;
   final RxDouble tax = 0.0.obs;
   final RxDouble discount = 0.0.obs;
   final RxDouble grandTotal = 0.0.obs;
 
-  // State Diskon
   final Rx<DiscountType> discountType = DiscountType.none.obs;
   final TextEditingController discountController = TextEditingController();
 
-  // State Pembayaran
   final Rx<PaymentMethod> selectedPaymentMethod = PaymentMethod.none.obs;
   final TextEditingController cashAmountController = TextEditingController();
   final RxDouble cashChange = 0.0.obs;
@@ -42,9 +38,7 @@ class CheckoutController extends GetxController {
     orderItems.assignAll(homeController.cartItems);
     calculateCosts();
 
-    cashAmountController.addListener(() {
-      calculateChange();
-    });
+    cashAmountController.addListener(calculateChange);
   }
 
   @override
@@ -148,12 +142,12 @@ class CheckoutController extends GetxController {
 
   void selectPaymentMethod(PaymentMethod method) {
     selectedPaymentMethod.value = method;
-    Get.back(); // Tutup bottom sheet setelah memilih
+    Get.back();
   }
 
   void calculateChange() {
     final cashAmount = double.tryParse(cashAmountController.text) ?? 0;
-    if (cashAmount > 0) {
+    if (cashAmount >= grandTotal.value) {
       cashChange.value = cashAmount - grandTotal.value;
     } else {
       cashChange.value = 0.0;
@@ -165,39 +159,44 @@ class CheckoutController extends GetxController {
   }
 
   void processTransaction() {
-    // Di sini logika untuk menyimpan transaksi ke database/API
-    // Untuk sekarang, kita hanya akan menampilkan dialog sukses
+    if (selectedPaymentMethod.value == PaymentMethod.none) {
+      Get.snackbar('Gagal', 'Silakan pilih metode pembayaran terlebih dahulu.',
+          snackPosition: SnackPosition.TOP, backgroundColor: Colors.red, colorText: Colors.white);
+      return;
+    }
 
-    // Reset keranjang di HomeController
     final homeController = Get.find<HomeController>();
     homeController.clearCart();
 
     Get.dialog(
       barrierDismissible: false,
       AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Transaksi Berhasil'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.check_circle, color: AppColors.primary, size: 60),
             const SizedBox(height: 16),
-            const Text('Pembayaran telah berhasil diproses.'),
-            if (selectedPaymentMethod.value == PaymentMethod.cash && cashChange.value > 0)
-              Text('Kembalian: Rp ${cashChange.value.toStringAsFixed(0)}')
+            const Text('Pembayaran telah berhasil diproses.', textAlign: TextAlign.center),
+            if (selectedPaymentMethod.value == PaymentMethod.cash && cashChange.value >= 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                    'Kembalian: Rp ${NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0).format(cashChange.value)}'),
+              )
           ],
         ),
+        actionsAlignment: MainAxisAlignment.center,
         actions: [
           TextButton(
             onPressed: () {
-              // Kembali ke halaman kasir
               Get.offAllNamed(Routes.HOME);
             },
             child: const Text('Transaksi Baru'),
           ),
           ElevatedButton(
-            onPressed: () {
-              // Aksi untuk cetak struk
-            },
+            onPressed: () {},
             child: const Text('Cetak Struk'),
           ),
         ],

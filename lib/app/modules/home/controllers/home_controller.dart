@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pos_app/app/data/product_model.dart';
 import 'package:pos_app/app/data/providers/product_provider.dart';
+import 'package:pos_app/app/modules/checkout/widgets/payment_method_sheet.dart';
 import 'package:pos_app/app/modules/home/widgets/cart_details_sheet.dart';
 import 'package:pos_app/app/routes/app_pages.dart';
 
@@ -149,7 +150,11 @@ class HomeController extends GetxController {
 
   void goToCheckout() {
     if (cartItems.isEmpty) return;
-    // Tidak perlu lagi mengirim argumen
+
+    if (Get.isBottomSheetOpen ?? false) {
+      Get.back();
+    }
+
     Get.toNamed(Routes.CHECKOUT);
   }
 }
