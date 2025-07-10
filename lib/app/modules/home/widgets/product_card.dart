@@ -1,12 +1,13 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-
 import 'package:pos_app/app/data/models/product_model.dart';
 import 'package:pos_app/app/modules/home/controllers/home_controller.dart';
 import 'package:pos_app/core/theme/app_colors.dart';
 import 'package:pos_app/core/theme/app_text_styles.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -24,7 +25,6 @@ class ProductCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // --- BAGIAN GAMBAR DENGAN BADGE KUANTITAS ---
           Expanded(
             child: Stack(
               children: [
@@ -34,13 +34,18 @@ class ProductCard extends StatelessWidget {
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16),
                     ),
-                    child: Image.network(
-                      product.imageUrl,
+                    child: CachedNetworkImage(
+                      imageUrl: product.imageUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
+                      placeholder: (context, url) => Shimmer.fromColors(
+                        baseColor: Colors.grey[200]!,
+                        highlightColor: Colors.grey[100]!,
+                        child: Container(color: Colors.white),
+                      ),
+                      errorWidget: (context, url, error) => Container(
                         color: Colors.grey.shade100,
                         child: const Icon(
-                          Icons.local_drink_rounded,
+                          Icons.image_not_supported_rounded,
                           color: AppColors.grey,
                           size: 40,
                         ),
@@ -48,7 +53,6 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Widget Badge Kuantitas
                 Obx(() {
                   final quantity = controller.cartItems[product] ?? 0;
                   if (quantity == 0) {
@@ -78,7 +82,6 @@ class ProductCard extends StatelessWidget {
               ],
             ),
           ),
-          // --- BAGIAN NAMA PRODUK ---
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
             child: Text(
@@ -88,7 +91,6 @@ class ProductCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          // --- BAGIAN HARGA & TOMBOL TAMBAH ---
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: Row(
@@ -104,7 +106,6 @@ class ProductCard extends StatelessWidget {
                     fontSize: 16,
                   ),
                 ),
-                // Tombol Tambah yang Selalu Konsisten
                 GestureDetector(
                   onTap: () {
                     controller.addToCart(product);

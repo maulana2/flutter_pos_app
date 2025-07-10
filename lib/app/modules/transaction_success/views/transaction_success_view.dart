@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:pos_app/app/data/models/product_model.dart';
 import 'package:pos_app/app/modules/checkout/controllers/checkout_controller.dart';
 import 'package:pos_app/core/theme/app_colors.dart';
 import 'package:pos_app/core/theme/app_text_styles.dart';
@@ -40,11 +41,11 @@ class TransactionSuccessView extends GetView<TransactionSuccessController> {
   Widget _buildHeader() {
     return Column(
       children: [
-        Icon(Icons.check_circle, color: AppColors.primary, size: 80),
-        SizedBox(height: 16),
+        const Icon(Icons.check_circle, color: AppColors.primary, size: 80),
+        const SizedBox(height: 16),
         Text('Pembayaran Berhasil', style: AppTextStyles.heading),
         SizedBox(height: 4),
-        Text('Terima kasih atas pesanan Anda.'),
+        const Text('Terima kasih atas pesanan Anda.'),
       ],
     );
   }

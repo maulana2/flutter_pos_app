@@ -1,7 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-
 import 'package:pos_app/app/data/models/product_model.dart';
 import 'package:pos_app/app/modules/home/controllers/home_controller.dart';
 import 'package:pos_app/core/theme/app_colors.dart';
@@ -185,11 +185,13 @@ class _CartListItem extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              product.imageUrl,
+            child: CachedNetworkImage(
+              imageUrl: product.imageUrl,
               width: 60,
               height: 60,
               fit: BoxFit.cover,
+              placeholder: (context, url) => Container(color: Colors.grey.shade200),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
             ),
           ),
           const SizedBox(width: 12),
