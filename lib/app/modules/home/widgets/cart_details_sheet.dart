@@ -30,7 +30,6 @@ class CartDetailsSheet extends GetView<HomeController> {
                 child: Obx(
                   () {
                     if (controller.cartItems.isEmpty) {
-                      // Tutup bottom sheet jika keranjang menjadi kosong
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         Get.back();
                       });
@@ -154,7 +153,7 @@ class CartDetailsSheet extends GetView<HomeController> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () => controller.goToCheckout(),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.accent,
                         padding: const EdgeInsets.symmetric(vertical: 16),

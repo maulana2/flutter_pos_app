@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:pos_app/app/data/product_model.dart';
 import 'package:pos_app/app/data/providers/product_provider.dart';
 import 'package:pos_app/app/modules/home/widgets/cart_details_sheet.dart';
-import 'package:pos_app/core/theme/app_colors.dart';
+import 'package:pos_app/app/routes/app_pages.dart';
 
 class HomeController extends GetxController {
   final ProductProvider _productProvider = ProductProvider();
@@ -145,5 +145,11 @@ class HomeController extends GetxController {
       ),
       isScrollControlled: true,
     );
+  }
+
+  void goToCheckout() {
+    if (cartItems.isEmpty) return;
+    // Tidak perlu lagi mengirim argumen
+    Get.toNamed(Routes.CHECKOUT);
   }
 }
