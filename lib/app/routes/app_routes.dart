@@ -7,6 +7,7 @@ abstract class Routes {
   static const SPLASH = _Paths.SPLASH;
   static const CHECKOUT = _Paths.CHECKOUT;
   static const TRANSACTION_SUCCESS = _Paths.TRANSACTION_SUCCESS;
+  static const HISTORY = _Paths.HISTORY;
 }
 
 abstract class _Paths {
@@ -15,4 +16,5 @@ abstract class _Paths {
   static const SPLASH = '/splash';
   static const CHECKOUT = '/checkout';
   static const TRANSACTION_SUCCESS = '/transaction-success';
+  static const HISTORY = '/history';
 }
