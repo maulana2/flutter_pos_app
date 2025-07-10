@@ -1,8 +1,8 @@
+import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
-import 'package:pos_app/app/data/models/product_model.dart';
-import 'package:pos_app/app/data/models/transaction_model.dart';
+import 'package:pos_app/app/data/local/app_database.dart';
+import 'package:pos_app/app/data/services/transaction_service.dart';
 import 'package:pos_app/app/modules/home/controllers/home_controller.dart';
 import 'package:pos_app/app/modules/checkout/widgets/payment_method_sheet.dart';
 import 'package:pos_app/app/routes/app_pages.dart';
@@ -15,6 +15,7 @@ enum DiscountType { none, percent, nominal }
 enum PaymentMethod { none, cash, qris }
 
 class CheckoutController extends GetxController {
+  late final TransactionService _transactionService;
   final RxMap<Product, int> orderItems = <Product, int>{}.obs;
 
   final Rx<OrderType> orderType = OrderType.dineIn.obs;
@@ -35,6 +36,8 @@ class CheckoutController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _transactionService = Get.find<TransactionService>();
+
     final homeController = Get.find<HomeController>();
     orderItems.assignAll(homeController.cartItems);
     calculateCosts();
@@ -159,7 +162,7 @@ class CheckoutController extends GetxController {
     cashAmountController.text = amount.toStringAsFixed(0);
   }
 
-  void processTransaction() {
+  Future<void> processTransaction() async {
     if (selectedPaymentMethod.value == PaymentMethod.none) {
       Get.snackbar('Gagal', 'Silakan pilih metode pembayaran terlebih dahulu.',
           snackPosition: SnackPosition.TOP, backgroundColor: Colors.red, colorText: Colors.white);
@@ -167,23 +170,42 @@ class CheckoutController extends GetxController {
     }
 
     final homeController = Get.find<HomeController>();
-    homeController.clearCart();
 
-    final transaction = TransactionModel(
-      id: 'TRX-${DateTime.now().millisecondsSinceEpoch}',
+    final transactionData = Transaction(
+      id: 0,
+      transactionId: 'TRX-${DateTime.now().millisecondsSinceEpoch}',
       date: DateTime.now(),
-      items: Map.from(orderItems),
       subtotal: subtotal.value,
       discount: discount.value,
       tax: tax.value,
       grandTotal: grandTotal.value,
-      paymentMethod: selectedPaymentMethod.value,
+      paymentMethod: selectedPaymentMethod.value.name,
       cashAmount: double.tryParse(cashAmountController.text) ?? 0.0,
       cashChange: cashChange.value,
-      orderType: orderType.value,
-      notes: notesController.text,
+      orderType: orderType.value.name,
+      notes: notesController.text.isNotEmpty ? notesController.text : null,
     );
 
-    Get.offNamed(Routes.TRANSACTION_SUCCESS, arguments: transaction);
+    final transactionItems = orderItems.entries.map((entry) {
+      return TransactionItem(
+        id: 0,
+        transactionId: 0,
+        productId: entry.key.id,
+        productName: entry.key.name,
+        productPrice: entry.key.price,
+        quantity: entry.value,
+      );
+    }).toList();
+
+    final transactionWithItems = TransactionWithItems(
+      transaction: transactionData,
+      items: transactionItems,
+    );
+
+    await _transactionService.addTransaction(transactionWithItems);
+
+    homeController.clearCart();
+
+    Get.offNamed(Routes.TRANSACTION_SUCCESS, arguments: transactionWithItems);
   }
 }

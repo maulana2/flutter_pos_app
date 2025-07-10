@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pos_app/app/data/models/product_model.dart';
+import 'package:pos_app/app/data/local/app_database.dart';
 import 'package:pos_app/app/data/providers/product_provider.dart';
 import 'package:pos_app/app/modules/checkout/widgets/payment_method_sheet.dart';
 import 'package:pos_app/app/modules/home/widgets/cart_details_sheet.dart';
@@ -21,7 +21,12 @@ class HomeController extends GetxController {
   final RxDouble totalCartPrice = 0.0.obs;
 
   @override
-  void onInit() {
+/*************  ✨ Windsurf Command ⭐  *************/
+  /// Initializes the controller by setting up a listener on the searchController
+  /// to update the searchQuery whenever the text changes, and fetches products
+  /// from the provider.
+
+/*******  14c16179-4c9b-4021-a0a4-05511f321f73  *******/ void onInit() {
     super.onInit();
     searchController.addListener(() {
       searchQuery.value = searchController.text;

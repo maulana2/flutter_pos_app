@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:pos_app/app/data/models/product_model.dart';
+import 'package:pos_app/app/data/local/app_database.dart';
 import 'package:pos_app/app/modules/checkout/controllers/checkout_controller.dart';
 import 'package:pos_app/core/theme/app_colors.dart';
 import 'package:pos_app/core/theme/app_text_styles.dart';
@@ -44,7 +44,7 @@ class TransactionSuccessView extends GetView<TransactionSuccessController> {
         const Icon(Icons.check_circle, color: AppColors.primary, size: 80),
         const SizedBox(height: 16),
         Text('Pembayaran Berhasil', style: AppTextStyles.heading),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         const Text('Terima kasih atas pesanan Anda.'),
       ],
     );
@@ -79,6 +79,7 @@ class TransactionSuccessView extends GetView<TransactionSuccessController> {
   }
 
   Widget _buildReceiptHeader() {
+    final transaction = controller.transactionWithItems.transaction;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -87,27 +88,25 @@ class TransactionSuccessView extends GetView<TransactionSuccessController> {
           style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        Text('ID Transaksi: ${controller.transaction.id}'),
-        Text('Tanggal: ${DateFormat('d MMM y, HH:mm').format(controller.transaction.date)}'),
+        Text('ID Transaksi: ${transaction.transactionId}'),
+        Text('Tanggal: ${DateFormat('d MMM y, HH:mm').format(transaction.date)}'),
       ],
     );
   }
 
   Widget _buildOrderItemsList() {
     return Column(
-      children: controller.transaction.items.entries.map((entry) {
-        final product = entry.key;
-        final quantity = entry.value;
+      children: controller.transactionWithItems.items.map((item) {
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 4.0),
           child: Row(
             children: [
               Expanded(
-                child: Text('${product.name} x$quantity'),
+                child: Text('${item.productName} x${item.quantity}'),
               ),
               Text(
                 NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0)
-                    .format(product.price * quantity),
+                    .format(item.productPrice * item.quantity),
               ),
             ],
           ),
@@ -117,26 +116,27 @@ class TransactionSuccessView extends GetView<TransactionSuccessController> {
   }
 
   Widget _buildCostDetails() {
+    final transaction = controller.transactionWithItems.transaction;
     return Column(
       children: [
-        _buildCostRow('Subtotal', controller.transaction.subtotal),
+        _buildCostRow('Subtotal', transaction.subtotal),
         const SizedBox(height: 8),
-        _buildCostRow('Diskon', -controller.transaction.discount, color: Colors.green),
+        _buildCostRow('Diskon', -transaction.discount, color: Colors.green),
         const SizedBox(height: 8),
-        _buildCostRow('Pajak (10%)', controller.transaction.tax),
+        _buildCostRow('Pajak (10%)', transaction.tax),
         const Divider(height: 24, thickness: 1),
-        _buildCostRow('Total', controller.transaction.grandTotal, isTotal: true),
+        _buildCostRow('Total', transaction.grandTotal, isTotal: true),
       ],
     );
   }
 
   Widget _buildPaymentDetails() {
-    final transaction = controller.transaction;
+    final transaction = controller.transactionWithItems.transaction;
     return Column(
       children: [
         _buildCostRow('Metode Bayar', 0,
-            value: transaction.paymentMethod == PaymentMethod.cash ? 'Tunai' : 'QRIS'),
-        if (transaction.paymentMethod == PaymentMethod.cash) ...[
+            value: transaction.paymentMethod == PaymentMethod.cash.name ? 'Tunai' : 'QRIS'),
+        if (transaction.paymentMethod == PaymentMethod.cash.name) ...[
           const SizedBox(height: 8),
           _buildCostRow('Uang Tunai', transaction.cashAmount),
           const SizedBox(height: 8),
