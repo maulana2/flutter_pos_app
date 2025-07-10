@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pos_app/app/data/product_model.dart';
+import 'package:pos_app/app/modules/checkout/widgets/payment_method_sheet.dart';
 import 'package:pos_app/app/modules/home/controllers/home_controller.dart';
 
 enum OrderType { dineIn, takeAway }
@@ -8,20 +9,16 @@ enum OrderType { dineIn, takeAway }
 enum DiscountType { none, percent, nominal }
 
 class CheckoutController extends GetxController {
-  // Data Pesanan
   final RxMap<Product, int> orderItems = <Product, int>{}.obs;
 
-  // Opsi Pesanan
   final Rx<OrderType> orderType = OrderType.dineIn.obs;
   final TextEditingController notesController = TextEditingController();
 
-  // Kalkulasi Biaya
   final RxDouble subtotal = 0.0.obs;
   final RxDouble tax = 0.0.obs;
   final RxDouble discount = 0.0.obs;
   final RxDouble grandTotal = 0.0.obs;
 
-  // State untuk Diskon
   final Rx<DiscountType> discountType = DiscountType.none.obs;
   final TextEditingController discountController = TextEditingController();
 
@@ -48,7 +45,6 @@ class CheckoutController extends GetxController {
 
     subtotal.value = currentSubtotal;
 
-    // Hitung diskon
     if (discountType.value == DiscountType.percent) {
       final percentValue = double.tryParse(discountController.text) ?? 0;
       discount.value = subtotal.value * (percentValue / 100);
@@ -58,7 +54,6 @@ class CheckoutController extends GetxController {
       discount.value = 0.0;
     }
 
-    // Asumsi Pajak PB1 10% dari harga setelah diskon
     tax.value = (subtotal.value - discount.value) * 0.10;
     grandTotal.value = subtotal.value - discount.value + tax.value;
   }
@@ -68,9 +63,8 @@ class CheckoutController extends GetxController {
   }
 
   void applyDiscount() {
-    // Dipanggil saat user menekan 'Terapkan' di dialog diskon
     calculateCosts();
-    Get.back(); // Tutup dialog
+    Get.back();
   }
 
   void removeDiscount() {
@@ -119,6 +113,16 @@ class CheckoutController extends GetxController {
             child: const Text('Terapkan'),
           ),
         ],
+      ),
+    );
+  }
+
+  void showPaymentMethodSheet() {
+    Get.bottomSheet(
+      const PaymentMethodSheet(),
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
     );
   }

@@ -30,7 +30,7 @@ class CheckoutView extends GetView<CheckoutController> {
                   child: Column(
                     children: [
                       _buildOrderTypeSelector(),
-                      const SizedBox(height: 16),
+                      const Divider(height: 24),
                       _buildNotesField(),
                     ],
                   ),
@@ -39,37 +39,33 @@ class CheckoutView extends GetView<CheckoutController> {
                 _buildSectionCard(
                   title: 'Rincian Biaya',
                   child: _buildCostDetails(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 ),
+                const SizedBox(height: 100), // Memberi ruang agar tidak tertutup bottom bar
               ],
             ),
           ),
-          _buildBottomAction(),
         ],
       ),
+      // Mengganti _buildBottomAction dengan widget yang selalu terlihat
+      bottomNavigationBar: _buildFloatingSummaryBar(),
     );
   }
 
-  Widget _buildSectionCard({required String title, required Widget child, EdgeInsets? padding}) {
+  Widget _buildSectionCard({required String title, required Widget child}) {
     return Card(
       elevation: 0,
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
       ),
       child: Padding(
-        padding: padding ?? const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: EdgeInsets.only(
-                  left: (padding != null ? 0 : 0), bottom: (padding != null ? 8 : 0)),
-              child: Text(title,
-                  style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
-            ),
-            if (padding == null) const SizedBox(height: 16),
+            Text(title,
+                style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
+            const SizedBox(height: 16),
             child,
           ],
         ),
@@ -171,96 +167,102 @@ class CheckoutView extends GetView<CheckoutController> {
             _buildDiscountRow(),
             const SizedBox(height: 12),
             _buildCostRow('Pajak (10%)', controller.tax.value),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: _buildCostRow('Total Akhir', controller.grandTotal.value, isTotal: true),
-            ),
           ],
         ));
   }
 
   Widget _buildDiscountRow() {
-    return InkWell(
-      onTap: () => controller.openDiscountDialog(),
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                const Text('Diskon', style: TextStyle(color: Colors.green)),
-                if (controller.discount.value > 0)
-                  IconButton(
-                    icon: const Icon(Icons.clear, size: 16, color: Colors.red),
-                    onPressed: () => controller.removeDiscount(),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  )
-              ],
-            ),
-            Text(
-              '- ${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(controller.discount.value)}',
-              style: const TextStyle(color: Colors.green),
-            ),
-          ],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => controller.openDiscountDialog(),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Diskon', style: AppTextStyles.body.copyWith(color: Colors.green)),
+              Row(
+                children: [
+                  Text(
+                    controller.discount.value > 0
+                        ? '- ${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(controller.discount.value)}'
+                        : 'Gunakan',
+                    style: AppTextStyles.body
+                        .copyWith(color: Colors.green, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.green)
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildCostRow(String label, double amount, {bool isTotal = false}) {
-    final style = isTotal
-        ? AppTextStyles.heading.copyWith(fontSize: 20, color: AppColors.primary)
-        : AppTextStyles.body.copyWith(color: Colors.grey.shade700);
-
+  Widget _buildCostRow(String label, double amount) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label,
-            style: style.copyWith(fontWeight: isTotal ? FontWeight.bold : FontWeight.normal)),
+        Text(label, style: AppTextStyles.body.copyWith(color: Colors.grey.shade700)),
         Text(
           NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(amount),
-          style: style.copyWith(fontWeight: FontWeight.bold),
+          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
   }
 
-  Widget _buildBottomAction() {
+  Widget _buildFloatingSummaryBar() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
             offset: const Offset(0, -5),
           )
         ],
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
       ),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () {
-            // Aksi selanjutnya: buka bottom sheet metode pembayaran
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            textStyle: AppTextStyles.button.copyWith(fontSize: 18),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Total Pembayaran', style: TextStyle(color: AppColors.text)),
+                Obx(() => Text(
+                      NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0)
+                          .format(controller.grandTotal.value),
+                      style: AppTextStyles.heading.copyWith(color: AppColors.primary),
+                    )),
+              ],
+            ),
           ),
-          child: const Text('Pilih Metode Pembayaran'),
-        ),
+          const SizedBox(width: 16),
+          ElevatedButton(
+            onPressed: () {
+              controller.showPaymentMethodSheet();
+              // Aksi selanjutnya: buka bottom sheet metode pembayaran
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              textStyle: AppTextStyles.button.copyWith(fontSize: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Pilih Pembayaran'),
+          ),
+        ],
       ),
     );
   }
