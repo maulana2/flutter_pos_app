@@ -1,3 +1,4 @@
+import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -14,39 +15,42 @@ class CheckoutView extends GetView<CheckoutController> {
         title: const Text('Rincian Pembayaran'),
       ),
       backgroundColor: AppColors.background,
-      body: Column(
+      body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
+          _buildSectionCard(
+            title: 'Item Pesanan',
+            child: _buildOrderItemsList(),
+          ),
+          const SizedBox(height: 16),
+          _buildSectionCard(
+            title: 'Opsi Pesanan',
+            child: Column(
               children: [
-                _buildSectionCard(
-                  title: 'Item Pesanan',
-                  child: _buildOrderItemsList(),
-                ),
-                const SizedBox(height: 16),
-                _buildSectionCard(
-                  title: 'Opsi Pesanan',
-                  child: Column(
-                    children: [
-                      _buildOrderTypeSelector(),
-                      const Divider(height: 24),
-                      _buildNotesField(),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildSectionCard(
-                  title: 'Rincian Biaya',
-                  child: _buildCostDetails(),
-                ),
-                const SizedBox(height: 100), // Memberi ruang agar tidak tertutup bottom bar
+                _buildOrderTypeSelector(),
+                const Divider(height: 24),
+                _buildNotesField(),
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          _buildSectionCard(
+            title: 'Rincian Biaya',
+            child: _buildCostDetails(),
+          ),
+          const SizedBox(height: 16),
+          // --- UI PEMBAYARAN DINAMIS ---
+          Obx(() {
+            if (controller.selectedPaymentMethod.value == PaymentMethod.cash) {
+              return _buildCashPaymentSection();
+            } else if (controller.selectedPaymentMethod.value == PaymentMethod.qris) {
+              return _buildQrisPaymentSection();
+            }
+            return const SizedBox.shrink();
+          }),
+          const SizedBox(height: 120),
         ],
       ),
-      // Mengganti _buildBottomAction dengan widget yang selalu terlihat
       bottomNavigationBar: _buildFloatingSummaryBar(),
     );
   }
@@ -167,6 +171,11 @@ class CheckoutView extends GetView<CheckoutController> {
             _buildDiscountRow(),
             const SizedBox(height: 12),
             _buildCostRow('Pajak (10%)', controller.tax.value),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.0),
+              child: DottedLine(dashColor: AppColors.grey),
+            ),
+            _buildCostRow('Total', controller.grandTotal.value, isTotal: true),
           ],
         ));
   }
@@ -203,14 +212,18 @@ class CheckoutView extends GetView<CheckoutController> {
     );
   }
 
-  Widget _buildCostRow(String label, double amount) {
+  Widget _buildCostRow(String label, double amount, {bool isTotal = false}) {
+    final style = isTotal
+        ? AppTextStyles.heading.copyWith(fontSize: 20)
+        : AppTextStyles.body.copyWith(color: Colors.grey.shade700);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: AppTextStyles.body.copyWith(color: Colors.grey.shade700)),
+        Text(label, style: style.copyWith(fontWeight: isTotal ? FontWeight.bold : null)),
         Text(
           NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(amount),
-          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.bold),
+          style: style.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -230,37 +243,103 @@ class CheckoutView extends GetView<CheckoutController> {
         ],
         border: Border(top: BorderSide(color: Colors.grey.shade200)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Obx(() {
+        final isPaymentSelected = controller.selectedPaymentMethod.value != PaymentMethod.none;
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Total Pembayaran', style: TextStyle(color: AppColors.text)),
+                  Text(
+                    NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0)
+                        .format(controller.grandTotal.value),
+                    style: AppTextStyles.heading.copyWith(color: AppColors.primary),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            ElevatedButton(
+              onPressed: () {
+                if (isPaymentSelected) {
+                  controller.processTransaction();
+                } else {
+                  controller.showPaymentMethodSheet();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isPaymentSelected ? AppColors.accent : AppColors.primary,
+                foregroundColor: isPaymentSelected ? AppColors.text : AppColors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                textStyle: AppTextStyles.button.copyWith(fontSize: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(isPaymentSelected ? 'Selesaikan Transaksi' : 'Pilih Pembayaran'),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  Widget _buildCashPaymentSection() {
+    return _buildSectionCard(
+      title: 'Pembayaran Tunai',
+      child: Column(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Total Pembayaran', style: TextStyle(color: AppColors.text)),
-                Obx(() => Text(
-                      NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0)
-                          .format(controller.grandTotal.value),
-                      style: AppTextStyles.heading.copyWith(color: AppColors.primary),
-                    )),
-              ],
+          TextField(
+            controller: controller.cashAmountController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Jumlah Uang Diterima',
+              prefixText: 'Rp ',
+              border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(width: 16),
-          ElevatedButton(
-            onPressed: () {
-              controller.showPaymentMethodSheet();
-              // Aksi selanjutnya: buka bottom sheet metode pembayaran
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-              textStyle: AppTextStyles.button.copyWith(fontSize: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Pilih Pembayaran'),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildQuickCashButton(controller.grandTotal.value),
+              _buildQuickCashButton(50000),
+              _buildQuickCashButton(100000),
+            ],
+          ),
+          const Divider(height: 24),
+          Obx(() => _buildCostRow('Kembalian', controller.cashChange.value, isTotal: true)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickCashButton(double amount) {
+    return OutlinedButton(
+      onPressed: () => controller.setCashAmount(amount),
+      child: Text(NumberFormat.compact(locale: 'id').format(amount)),
+    );
+  }
+
+  Widget _buildQrisPaymentSection() {
+    return _buildSectionCard(
+      title: 'Pembayaran QRIS',
+      child: Column(
+        children: [
+          // Di sini Anda bisa menggunakan package seperti `qr_flutter` untuk menampilkan QR code asli
+          Container(
+            width: 200,
+            height: 200,
+            color: Colors.grey.shade300,
+            child: const Center(child: Icon(Icons.qr_code_2, size: 100)),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Pindai kode QR untuk membayar',
+            style: AppTextStyles.body,
+            textAlign: TextAlign.center,
           ),
         ],
       ),
