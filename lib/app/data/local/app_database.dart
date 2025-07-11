@@ -16,6 +16,7 @@ class Products extends Table {
   RealColumn get price => real()();
   TextColumn get imageUrl => text()();
   TextColumn get category => text()();
+  IntColumn get stock => integer().withDefault(const Constant(0))(); // ✅ tambahkan ini
 }
 
 @DataClassName('Transaction')

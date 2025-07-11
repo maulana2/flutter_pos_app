@@ -6,6 +6,7 @@ class ProductProvider {
 
     return [
       const Product(
+        stock: 10,
         id: 1,
         name: 'Es Dawet Original',
         price: 8000.0,
@@ -13,6 +14,7 @@ class ProductProvider {
         category: 'Minuman Dingin',
       ),
       const Product(
+        stock: 5,
         id: 2,
         name: 'Es Dawet Durian',
         price: 12000.0,
@@ -20,6 +22,7 @@ class ProductProvider {
         category: 'Minuman Dingin',
       ),
       const Product(
+        stock: 0,
         id: 3,
         name: 'Es Dawet Alpukat',
         price: 10000.0,
@@ -27,6 +30,7 @@ class ProductProvider {
         category: 'Minuman Dingin',
       ),
       const Product(
+        stock: 0,
         id: 4,
         name: 'Tahu Bakso',
         price: 5000.0,
@@ -34,6 +38,7 @@ class ProductProvider {
         category: 'Camilan',
       ),
       const Product(
+        stock: 10,
         id: 5,
         name: 'Mendoan',
         price: 5000.0,

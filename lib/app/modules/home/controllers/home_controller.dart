@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pos_app/app/data/local/app_database.dart';
 import 'package:pos_app/app/data/providers/product_provider.dart';
-import 'package:pos_app/app/modules/checkout/widgets/payment_method_sheet.dart';
 import 'package:pos_app/app/modules/home/widgets/cart_details_sheet.dart';
 import 'package:pos_app/app/routes/app_pages.dart';
 
@@ -21,15 +20,11 @@ class HomeController extends GetxController {
   final RxDouble totalCartPrice = 0.0.obs;
 
   @override
-/*************  ✨ Windsurf Command ⭐  *************/
-  /// Initializes the controller by setting up a listener on the searchController
-  /// to update the searchQuery whenever the text changes, and fetches products
-  /// from the provider.
-
-/*******  14c16179-4c9b-4021-a0a4-05511f321f73  *******/ void onInit() {
+  void onInit() {
     super.onInit();
     searchController.addListener(() {
       searchQuery.value = searchController.text;
+      applyFilters();
     });
     fetchProducts();
   }
@@ -43,61 +38,82 @@ class HomeController extends GetxController {
   void fetchProducts() async {
     try {
       isLoading.value = true;
-      var products = await _productProvider.getProducts();
+      final products = await _productProvider.getProducts();
       productList.assignAll(products);
       _extractCategories(products);
-      if (categoryList.isNotEmpty) {
-        selectedCategory.value = categoryList.first;
-      }
+    } catch (e) {
+      Get.snackbar("Error", "Gagal memuat produk: $e");
     } finally {
       isLoading.value = false;
     }
   }
 
   void _extractCategories(List<Product> products) {
-    var uniqueCategories = products.map((p) => p.category.trim()).toSet().toList();
+    final uniqueCategories = products
+        .map((p) => (p.category ?? '').trim())
+        .where((cat) => cat.isNotEmpty)
+        .toSet()
+        .toList();
     categoryList.assignAll(['Semua', ...uniqueCategories]);
   }
 
   void changeCategory(String category) {
     selectedCategory.value = category;
+    applyFilters();
   }
 
   List<Product> get filteredProducts {
     var filtered = productList.toList();
 
     if (selectedCategory.value != 'Semua') {
-      filtered = filtered.where((p) => p.category == selectedCategory.value).toList();
+      filtered = filtered
+          .where((p) =>
+              (p.category ?? '').toLowerCase().trim() ==
+              selectedCategory.value.toLowerCase().trim())
+          .toList();
     }
 
     if (searchQuery.value.isNotEmpty) {
       filtered = filtered
-          .where((p) => p.name.toLowerCase().contains(searchQuery.value.toLowerCase()))
+          .where((p) => (p.name ?? '').toLowerCase().contains(searchQuery.value.toLowerCase()))
           .toList();
     }
+
+    // Optional: Sort by name
+    filtered.sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
 
     return filtered;
   }
 
+  void applyFilters() {
+    // Just triggers UI updates via Obx or UI watching `filteredProducts`
+    update();
+  }
+
   void addToCart(Product product) {
-    cartItems.update(
-      product,
-      (value) => value + 1,
-      ifAbsent: () => 1,
-    );
+    cartItems.update(product, (qty) => qty + 1, ifAbsent: () => 1);
     calculateTotalPrice();
+    Get.snackbar(
+      'Berhasil',
+      '${product.name} ditambahkan ke keranjang',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+      duration: const Duration(seconds: 2),
+    );
   }
 
   void increaseQuantity(Product product) {
-    cartItems.update(product, (value) => value + 1);
+    cartItems.update(product, (qty) => qty + 1);
     calculateTotalPrice();
   }
 
   void decreaseQuantity(Product product) {
+    if (!cartItems.containsKey(product)) return;
     if (cartItems[product] == 1) {
       cartItems.remove(product);
     } else {
-      cartItems.update(product, (value) => value - 1);
+      cartItems.update(product, (qty) => qty - 1);
     }
     calculateTotalPrice();
   }
@@ -107,16 +123,26 @@ class HomeController extends GetxController {
     calculateTotalPrice();
   }
 
+  void calculateTotalPrice() {
+    double total = 0.0;
+    cartItems.forEach((product, qty) {
+      total += product.price * qty;
+    });
+    totalCartPrice.value = total;
+  }
+
+  void clearCart() {
+    cartItems.clear();
+    calculateTotalPrice();
+  }
+
   void confirmClearCart() {
     Get.dialog(
       AlertDialog(
         title: const Text('Konfirmasi'),
         content: const Text('Anda yakin ingin mengosongkan seluruh keranjang?'),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Batal'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           TextButton(
             onPressed: () {
               clearCart();
@@ -129,37 +155,83 @@ class HomeController extends GetxController {
     );
   }
 
-  void clearCart() {
-    cartItems.clear();
-    calculateTotalPrice();
-  }
-
-  void calculateTotalPrice() {
-    double total = 0.0;
-    cartItems.forEach((product, quantity) {
-      total += product.price * quantity;
-    });
-    totalCartPrice.value = total;
-  }
-
   void openCartDetails() {
+    if (cartItems.isEmpty) return;
+
     Get.bottomSheet(
       const CartDetailsSheet(),
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
     );
   }
 
   void goToCheckout() {
     if (cartItems.isEmpty) return;
-
-    if (Get.isBottomSheetOpen ?? false) {
-      Get.back();
-    }
-
+    if (Get.isBottomSheetOpen ?? false) Get.back();
     Get.toNamed(Routes.CHECKOUT);
+  }
+
+  void showQuickActions() {
+    Get.bottomSheet(
+      Wrap(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.notifications),
+            title: const Text('Notifikasi'),
+            onTap: () {
+              Get.back();
+              showNotifications();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.receipt_long),
+            title: const Text('Riwayat Transaksi'),
+            onTap: () {
+              Get.back();
+              Get.toNamed(Routes.HISTORY);
+            },
+          ),
+        ],
+      ),
+      backgroundColor: Colors.white,
+    );
+  }
+
+  void showNotifications() {
+    Get.dialog(
+      AlertDialog(
+        title: Row(
+          children: const [
+            Icon(Icons.notifications),
+            SizedBox(width: 8),
+            Text('Notifikasi'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            ListTile(
+              leading: Icon(Icons.warning, color: Colors.orange),
+              title: Text('Stok Rendah'),
+              subtitle: Text('Beberapa produk memiliki stok kurang dari 5'),
+            ),
+            ListTile(
+              leading: Icon(Icons.update, color: Colors.blue),
+              title: Text('Update Sistem'),
+              subtitle: Text('Aplikasi telah diperbarui ke versi terbaru'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
   }
 }
