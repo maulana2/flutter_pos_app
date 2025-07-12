@@ -363,11 +363,11 @@ class CheckoutView extends GetView<CheckoutController> {
 
     return OutlinedButton(
       onPressed: () => controller.setCashAmount(amount),
-      child: Text(NumberFormat.compact(locale: 'id').format(amount)),
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primary,
         side: const BorderSide(color: AppColors.primary),
       ),
+      child: Text(NumberFormat.compact(locale: 'id').format(amount)),
     );
   }
 

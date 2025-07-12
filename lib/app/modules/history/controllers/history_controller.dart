@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
-import 'package:pos_app/app/data/local/db/app_database.dart';
 import 'package:pos_app/app/data/local/db/models/transaction_with_items.dart';
 import 'package:pos_app/app/data/services/transaction_service.dart';
 import 'package:pos_app/app/routes/app_pages.dart';

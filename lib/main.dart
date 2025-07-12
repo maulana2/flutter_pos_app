@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-import 'package:pos_app/app/data/local/db/app_database.dart';
 import 'package:pos_app/app/data/providers/product_provider.dart';
 import 'package:pos_app/app/data/services/database_service.dart';
 import 'package:pos_app/app/data/services/transaction_service.dart';

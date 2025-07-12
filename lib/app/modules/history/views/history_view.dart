@@ -224,7 +224,7 @@ class HistoryView extends GetView<HistoryController> {
               color: AppColors.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.receipt_long_outlined,
               size: 64,
               color: AppColors.primary,
@@ -317,7 +317,7 @@ class HistoryView extends GetView<HistoryController> {
                 color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.receipt,
                 color: AppColors.primary,
                 size: 20,
@@ -390,7 +390,7 @@ class HistoryView extends GetView<HistoryController> {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.shopping_bag_outlined,
                 color: AppColors.grey,
                 size: 16,
@@ -433,7 +433,7 @@ class HistoryView extends GetView<HistoryController> {
       children: [
         Row(
           children: [
-            Icon(
+            const Icon(
               Icons.trending_up,
               color: AppColors.primary,
               size: 20,
