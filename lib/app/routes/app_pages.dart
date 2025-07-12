@@ -6,6 +6,8 @@ import '../modules/history/bindings/history_binding.dart';
 import '../modules/history/views/history_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
+import '../modules/product_management/bindings/product_management_binding.dart';
+import '../modules/product_management/views/product_management_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
 import '../modules/transaction_success/bindings/transaction_success_binding.dart';
@@ -43,6 +45,11 @@ class AppPages {
       name: _Paths.HISTORY,
       page: () => const HistoryView(),
       binding: HistoryBinding(),
+    ),
+    GetPage(
+      name: _Paths.PRODUCT_MANAGEMENT,
+      page: () => const ProductManagementView(),
+      binding: ProductManagementBinding(),
     ),
   ];
 }

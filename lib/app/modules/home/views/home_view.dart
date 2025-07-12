@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:pos_app/app/data/local/db/app_database.dart';
 import 'package:pos_app/app/modules/home/widgets/product_card.dart';
 import 'package:pos_app/app/routes/app_pages.dart';
 import 'package:pos_app/core/theme/app_colors.dart';
@@ -229,6 +230,15 @@ class HomeView extends GetView<HomeController> {
                   hintText: 'Cari produk...',
                   hintStyle: TextStyle(color: AppColors.grey.withOpacity(0.7)),
                   prefixIcon: Icon(Icons.search, color: AppColors.grey),
+                  suffixIcon: Obx(() => controller.searchQuery.value.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear, color: AppColors.grey),
+                          onPressed: () {
+                            controller.searchController.clear();
+                            controller.updateSearchQuery('');
+                          },
+                        )
+                      : const SizedBox.shrink()),
                   filled: true,
                   fillColor: AppColors.white,
                   contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -237,7 +247,7 @@ class HomeView extends GetView<HomeController> {
                     borderSide: BorderSide.none,
                   ),
                 ),
-                onChanged: (value) {},
+                onChanged: (value) => controller.updateSearchQuery(value), // ✅ Fixed
               ),
             ),
           ),
@@ -281,69 +291,83 @@ class HomeView extends GetView<HomeController> {
     return Container(
       height: 50,
       margin: const EdgeInsets.only(bottom: 16),
-      child: Obx(() {
-        if (controller.categoryList.isEmpty) {
-          return const SizedBox.shrink();
-        }
+      child: GetBuilder<HomeController>(
+        id: 'categoryTabs', // ✅ Specific ID for targeted updates
+        builder: (controller) {
+          if (controller.categoryList.isEmpty) {
+            return const SizedBox.shrink();
+          }
 
-        return ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: controller.categoryList.length,
-          itemBuilder: (context, index) {
-            final category = controller.categoryList[index];
-            final isSelected = category.trim() == controller.selectedCategory.value.trim();
+          return ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: controller.categoryList.length,
+            itemBuilder: (context, index) {
+              final category = controller.categoryList[index];
+              final isSelected = _isCategorySelected(category);
 
-            return GestureDetector(
-              key: ValueKey(category),
-              onTap: () {
-                controller.changeCategory(category);
-                HapticFeedback.lightImpact();
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : AppColors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(
-                    color: isSelected ? AppColors.primary : AppColors.grey.withOpacity(0.3),
-                    width: 1,
+              return GestureDetector(
+                key: ValueKey('category_$index'),
+                onTap: () {
+                  controller.changeCategory(category);
+                  HapticFeedback.lightImpact();
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  margin: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.primary : AppColors.white,
+                    borderRadius: BorderRadius.circular(25),
+                    border: Border.all(
+                      color: isSelected ? AppColors.primary : AppColors.grey.withOpacity(0.3),
+                      width: 1,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
                   ),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                ),
-                child: Center(
-                  child: Text(
-                    category,
-                    style: AppTextStyles.body.copyWith(
-                      color: isSelected ? AppColors.white : AppColors.text,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                      fontSize: 14,
+                  child: Center(
+                    child: Text(
+                      category,
+                      style: AppTextStyles.body.copyWith(
+                        color: isSelected ? AppColors.white : AppColors.text,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
-        );
-      }),
+              );
+            },
+          );
+        },
+      ),
     );
+  }
+
+// ✅ Helper method for better category comparison
+  bool _isCategorySelected(String category) {
+    final selected = controller.selectedCategory.value;
+    final normalizedCategory = category.trim().toLowerCase();
+    final normalizedSelected = selected.trim().toLowerCase();
+
+    print('Comparing: "$normalizedCategory" vs "$normalizedSelected"'); // Debug log
+
+    return normalizedCategory == normalizedSelected;
   }
 
   Widget _buildProductGrid() {
@@ -451,7 +475,8 @@ class HomeView extends GetView<HomeController> {
           ElevatedButton.icon(
             onPressed: () {
               controller.searchController.clear();
-              controller.changeCategory('Semua');
+              controller.updateSearchQuery(''); // ✅ Clear search
+              controller.changeCategory('Semua'); // ✅ Reset category
               HapticFeedback.lightImpact();
             },
             icon: const Icon(Icons.refresh),
@@ -602,7 +627,7 @@ class HomeView extends GetView<HomeController> {
 
 // Enhanced Product Card Component
 class EnhancedProductCard extends StatelessWidget {
-  final dynamic product;
+  final Product product; // ✅ Changed from dynamic to Product
 
   const EnhancedProductCard({super.key, required this.product});
 
@@ -669,7 +694,7 @@ class EnhancedProductCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        'Stock: ${product.stock}',
+                        'Stock: ${product.stock ?? 0}',
                         style: AppTextStyles.subtitle.copyWith(
                           color: AppColors.white,
                           fontSize: 10,
@@ -693,7 +718,7 @@ class EnhancedProductCard extends StatelessWidget {
                   // Product Name
                   Expanded(
                     child: Text(
-                      product.name ?? '',
+                      product.name ?? 'Unnamed Product',
                       style: AppTextStyles.body.copyWith(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -705,7 +730,7 @@ class EnhancedProductCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   // Category
                   Text(
-                    product.category ?? '',
+                    product.category ?? 'No Category',
                     style: AppTextStyles.subtitle.copyWith(
                       color: AppColors.grey,
                       fontSize: 12,
@@ -736,22 +761,25 @@ class EnhancedProductCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
+                      // ✅ Improved add button with stock validation
                       Material(
-                        color: AppColors.primary,
+                        color: (product.stock ?? 0) > 0 ? AppColors.primary : AppColors.grey,
                         borderRadius: BorderRadius.circular(8),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(8),
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            Get.find<HomeController>().addToCart(product);
-                          },
+                          onTap: (product.stock ?? 0) > 0
+                              ? () {
+                                  HapticFeedback.lightImpact();
+                                  Get.find<HomeController>().addToCart(product);
+                                }
+                              : null,
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
-                              Icons.add,
+                              (product.stock ?? 0) > 0 ? Icons.add : Icons.remove,
                               color: AppColors.white,
                               size: 16,
                             ),

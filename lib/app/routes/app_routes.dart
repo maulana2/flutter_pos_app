@@ -8,6 +8,7 @@ abstract class Routes {
   static const CHECKOUT = _Paths.CHECKOUT;
   static const TRANSACTION_SUCCESS = _Paths.TRANSACTION_SUCCESS;
   static const HISTORY = _Paths.HISTORY;
+  static const PRODUCT_MANAGEMENT = _Paths.PRODUCT_MANAGEMENT;
 }
 
 abstract class _Paths {
@@ -17,4 +18,5 @@ abstract class _Paths {
   static const CHECKOUT = '/checkout';
   static const TRANSACTION_SUCCESS = '/transaction-success';
   static const HISTORY = '/history';
+  static const PRODUCT_MANAGEMENT = '/product-management';
 }
