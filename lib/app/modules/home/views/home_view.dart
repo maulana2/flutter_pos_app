@@ -41,6 +41,10 @@ class HomeView extends GetView<HomeController> {
       backgroundColor: AppColors.primary,
       foregroundColor: AppColors.white,
       elevation: 0,
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         title: Column(
@@ -79,17 +83,32 @@ class HomeView extends GetView<HomeController> {
         ),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          tooltip: 'Notifikasi',
-          onPressed: () => controller.showNotifications(),
+        Container(
+          margin: const EdgeInsets.only(right: 4),
+          child: IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            tooltip: 'Notifikasi',
+            onPressed: () => controller.showNotifications(),
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.white.withOpacity(0.1),
+              foregroundColor: AppColors.white,
+              padding: const EdgeInsets.all(8),
+            ),
+          ),
         ),
-        IconButton(
-          icon: const Icon(Icons.history_rounded),
-          tooltip: 'Riwayat Transaksi',
-          onPressed: () => Get.toNamed(Routes.HISTORY),
+        Container(
+          margin: const EdgeInsets.only(right: 8),
+          child: IconButton(
+            icon: const Icon(Icons.history_rounded),
+            tooltip: 'Riwayat Transaksi',
+            onPressed: () => Get.toNamed(Routes.HISTORY),
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.white.withOpacity(0.1),
+              foregroundColor: AppColors.white,
+              padding: const EdgeInsets.all(8),
+            ),
+          ),
         ),
-        const SizedBox(width: 8),
       ],
     );
   }
@@ -153,27 +172,36 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _buildStatItem(String label, String value, IconData icon, Color color) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: AppTextStyles.body.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppColors.text,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: AppTextStyles.body.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.text,
+              fontSize: 13,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: AppTextStyles.subtitle.copyWith(
-            fontSize: 11,
-            color: AppColors.grey,
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: AppTextStyles.subtitle.copyWith(
+              fontSize: 10,
+              color: AppColors.grey,
+            ),
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
           ),
-          textAlign: TextAlign.center,
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -235,8 +263,16 @@ class HomeView extends GetView<HomeController> {
       ),
       child: IconButton(
         icon: Icon(Icons.tune, color: AppColors.primary),
-        onPressed: () {},
+        onPressed: () {
+          HapticFeedback.lightImpact();
+          // Add filter functionality here
+        },
         tooltip: 'Filter',
+        style: IconButton.styleFrom(
+          backgroundColor: AppColors.white,
+          foregroundColor: AppColors.primary,
+          padding: const EdgeInsets.all(12),
+        ),
       ),
     );
   }
@@ -312,7 +348,7 @@ class HomeView extends GetView<HomeController> {
 
   Widget _buildProductGrid() {
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100), // Added bottom padding for cart bar
       sliver: Obx(() {
         if (controller.isLoading.value) {
           return _buildShimmerGrid();
@@ -327,7 +363,7 @@ class HomeView extends GetView<HomeController> {
             crossAxisCount: 2,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: 0.75,
+            childAspectRatio: 0.8, // Adjusted for better proportions
           ),
           delegate: SliverChildBuilderDelegate(
             (context, index) {
@@ -356,7 +392,7 @@ class HomeView extends GetView<HomeController> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 0.75,
+        childAspectRatio: 0.8,
       ),
       delegate: SliverChildBuilderDelegate(
         (context, index) {
@@ -413,7 +449,11 @@ class HomeView extends GetView<HomeController> {
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: () {},
+            onPressed: () {
+              controller.searchController.clear();
+              controller.changeCategory('Semua');
+              HapticFeedback.lightImpact();
+            },
             icon: const Icon(Icons.refresh),
             label: const Text('Reset Filter'),
             style: ElevatedButton.styleFrom(
@@ -434,9 +474,13 @@ class HomeView extends GetView<HomeController> {
     return Container(
       margin: const EdgeInsets.only(top: 80),
       child: FloatingActionButton(
-        onPressed: () => controller.showQuickActions(),
+        onPressed: () {
+          HapticFeedback.mediumImpact();
+          controller.showQuickActions();
+        },
         backgroundColor: AppColors.accent,
         foregroundColor: AppColors.black,
+        elevation: 4,
         child: const Icon(Icons.more_horiz),
       ),
     );
@@ -467,63 +511,71 @@ class HomeView extends GetView<HomeController> {
           ],
         ),
         child: SafeArea(
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              controller.openCartDetails();
-            },
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.shopping_cart,
-                    color: AppColors.white,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${controller.cartItems.length} Item di Keranjang',
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.white.withOpacity(0.9),
-                          fontSize: 13,
-                        ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.mediumImpact();
+                controller.openCartDetails();
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _formatCurrency(controller.totalCartPrice.value),
-                        style: AppTextStyles.heading.copyWith(
-                          color: AppColors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      child: Icon(
+                        Icons.shopping_cart,
+                        color: AppColors.white,
+                        size: 24,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${controller.cartItems.length} Item di Keranjang',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.white.withOpacity(0.9),
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _formatCurrency(controller.totalCartPrice.value),
+                            style: AppTextStyles.heading.copyWith(
+                              color: AppColors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.arrow_forward_ios,
+                        color: AppColors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ],
                 ),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    color: AppColors.white,
-                    size: 16,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -638,51 +690,71 @@ class EnhancedProductCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    product.name ?? '',
-                    style: AppTextStyles.body.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                  // Product Name
+                  Expanded(
+                    child: Text(
+                      product.name ?? '',
+                      style: AppTextStyles.body.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
+                  // Category
                   Text(
                     product.category ?? '',
                     style: AppTextStyles.subtitle.copyWith(
                       color: AppColors.grey,
                       fontSize: 12,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 8),
+                  // Price and Add Button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        NumberFormat.currency(
-                          locale: 'id_ID',
-                          symbol: 'Rp ',
-                          decimalDigits: 0,
-                        ).format(product.price ?? 0),
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                      Expanded(
+                        child: Text(
+                          NumberFormat.currency(
+                            locale: 'id_ID',
+                            symbol: 'Rp ',
+                            decimalDigits: 0,
+                          ).format(product.price ?? 0),
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () => Get.find<HomeController>().addToCart(product),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.add,
-                            color: AppColors.white,
-                            size: 16,
+                      const SizedBox(width: 8),
+                      Material(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(8),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            Get.find<HomeController>().addToCart(product);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.add,
+                              color: AppColors.white,
+                              size: 16,
+                            ),
                           ),
                         ),
                       ),

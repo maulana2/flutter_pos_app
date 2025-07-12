@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:pos_app/app/data/local/app_database.dart';
+import 'package:pos_app/app/data/local/db/app_database.dart';
 import 'package:pos_app/app/modules/checkout/controllers/checkout_controller.dart';
 import 'package:pos_app/core/theme/app_colors.dart';
 import 'package:pos_app/core/theme/app_text_styles.dart';

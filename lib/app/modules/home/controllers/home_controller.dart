@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pos_app/app/data/local/app_database.dart';
+import 'package:pos_app/app/data/local/db/app_database.dart';
 import 'package:pos_app/app/data/providers/product_provider.dart';
 import 'package:pos_app/app/modules/home/widgets/cart_details_sheet.dart';
 import 'package:pos_app/app/routes/app_pages.dart';

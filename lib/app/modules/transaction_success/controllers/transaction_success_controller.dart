@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
-import 'package:pos_app/app/data/local/app_database.dart';
+import 'package:pos_app/app/data/local/db/app_database.dart';
+import 'package:pos_app/app/data/local/db/models/transaction_with_items.dart';
 import 'package:pos_app/app/routes/app_pages.dart';
 
 class TransactionSuccessController extends GetxController {

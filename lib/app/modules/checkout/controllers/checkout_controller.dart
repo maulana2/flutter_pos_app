@@ -1,7 +1,8 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pos_app/app/data/local/app_database.dart';
+import 'package:pos_app/app/data/local/db/app_database.dart';
+import 'package:pos_app/app/data/local/db/models/transaction_with_items.dart';
 import 'package:pos_app/app/data/services/transaction_service.dart';
 import 'package:pos_app/app/modules/home/controllers/home_controller.dart';
 import 'package:pos_app/app/modules/checkout/widgets/payment_method_sheet.dart';
